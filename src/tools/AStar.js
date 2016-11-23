@@ -9,6 +9,7 @@ var AStar = drogon.Class.extend({
     },
     //查找核心算法
     _search: function(srcNode, destNode){
+        var _this = this;
         this.openList.push(srcNode);
         var resultList = [];
         var isFind = false;
@@ -20,10 +21,9 @@ var AStar = drogon.Class.extend({
                 break;
             }
 
-            var _this = this;
             this.traverse(node, function(newNode, cost){
                 _this.checkNode(newNode, destNode, cost);
-            })
+            });
 
             //从开启列表中删除
             this.openList.splice(this.openList.indexOf(node),1);
@@ -57,7 +57,6 @@ var AStar = drogon.Class.extend({
             }
         }else{
             //添加到开启列表中
-            node.parent = node.parent;
             this.count(node, eNode, cost);
             this.openList.push(node);
         }
@@ -103,7 +102,7 @@ var AStar = drogon.Class.extend({
     },
     //virtual function
     countF: function(node){
-    },
+    }
 });
 
 var GridAStar = (function(){
@@ -119,7 +118,7 @@ var GridAStar = (function(){
         },
         toString: function(){
             return "("+this.x+","+this.y+","+this.f+")";
-        },
+        }
     });
 
     var GridAStar = AStar.extend({
@@ -142,19 +141,11 @@ var GridAStar = (function(){
             var srcNode = new Node(x1, y1, null);//起点
             var dstNode = new Node(x2, y2, null);//目标
 
-            var resultList = this._search(srcNode, dstNode);
-            if(resultList.length == 0){
-                return 0;
-            }
-            console.log(resultList);
-            for(var i = 0; i < resultList.length; i++){
-                this.map[resultList[i].x][resultList[i].y] = 2;
-            }
-            return 1;
+            return this._search(srcNode, dstNode);
         },
         findBest: function(list){
             if(list.length === 0)
-                return null
+                return null;
             var node = list[list.length-1];
             for(var i = list.length-2; i >= 0; i--)
                 if(list[i].f < node.f)
@@ -162,50 +153,51 @@ var GridAStar = (function(){
             return node;
         },
         traverse: function(node, callback){
+            var newNode;
             //上
             if((node.y-1)>=0){
-                var newNode = new Node(node.x,node.y-1, node);
+                newNode = new Node(node.x,node.y-1, node);
                 callback(newNode, this.COST_STRAIGHT)
             }
 
             //下
             if((node.y+1)< this.column){
-                var newNode = new Node(node.x,node.y+1, node);
+                newNode = new Node(node.x,node.y+1, node);
                 callback(newNode, this.COST_STRAIGHT);
             }
 
             //左
             if((node.x-1)>=0){
-                var newNode = new Node(node.x-1,node.y, node);
+                newNode = new Node(node.x-1,node.y, node);
                 callback(newNode, this.COST_STRAIGHT);
             }
             //右
             if((node.x+1)< this.row){
-                var newNode = new Node(node.x+1,node.y, node);
+                newNode = new Node(node.x+1,node.y, node);
                 callback(newNode, this.COST_STRAIGHT);
             }
 
             //左上
             if((node.x-1)>=0&&(node.y-1)>=0){
-                var newNode = new Node(node.x-1,node.y-1, node);
+                newNode = new Node(node.x-1,node.y-1, node);
                 callback(newNode, this.COST_DIAGONAL);
             }
 
             //左下
             if((node.x-1)>=0&&(node.y+1)< this.column){
-                var newNode = new Node(node.x-1,node.y+1, node);
+                newNode = new Node(node.x-1,node.y+1, node);
                 callback(newNode, this.COST_DIAGONAL);
             }
 
             //右上
             if((node.x+1)< this.row&&(node.y-1)>=0){
-                var newNode = new Node(node.x+1,node.y-1, node);
+                newNode = new Node(node.x+1,node.y-1, node);
                 callback(newNode, this.COST_DIAGONAL);
             }
 
             //右下
             if((node.x+1)< this.row&&(node.y+1)< this.column){
-                var newNode = new Node(node.x+1,node.y+1, node);
+                newNode = new Node(node.x+1,node.y+1, node);
                 callback(newNode, this.COST_DIAGONAL);
             }
         },
@@ -242,7 +234,7 @@ var GridAStar = (function(){
         countF: function(node){
             node.f = node.g+node.h;
         }
-    })
+    });
     return GridAStar;
 })();
 
@@ -263,14 +255,19 @@ var test = function(){
         COST_STRAIGHT: COST_STRAIGHT,
         COST_DIAGONAL: COST_DIAGONAL,
         row: row,
-        column: column,
+        column: column
     });
-    var flag= astar.search(3, 2, 3, 8);
-    if(flag==-1){
+    var result = astar.search(3, 2, 3, 8);
+    if(result==-1){
         alert("传输数据有误！");
-    }else if(flag==0){
+    }else if(result.length == 0){
         alert("没找到！");
-    }else{
+    }
+    else{
+        console.log(result);
+        for(var i = 0; i < result.length; i++){
+            map[result[i].x][result[i].y] = 2;
+        }
         var str = "";
         for(var x=0;x< 6;x++){
             for(var y=0;y< 10;y++){
@@ -286,5 +283,5 @@ var test = function(){
         }
         console.log(str);
     }
-}
+};
 test();
